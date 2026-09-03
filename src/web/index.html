@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Archon — Rencontrer le cahier des charges</title>
+<style>
+  :root {
+    --primary: #0ea5e9;
+    --secondary: #8b5cf6;
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #263449;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #f59e0b;
+    --border: #334155;
+    --danger: #f87171;
+    --ok: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 500px at 50% -10%, #13233c 0%, var(--bg) 55%);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 {
+    font-size: 1.9rem; letter-spacing: -0.02em; margin: 0 0 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header p { color: var(--muted); margin: 0 0 24px; }
+  section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin-bottom: 18px;
+  }
+  section h2 {
+    font-size: 1rem; margin: 0 0 14px; color: var(--primary); text-transform: uppercase;
+    letter-spacing: 0.08em; font-size: 0.78rem;
+  }
+  label { display: block; font-size: 0.86rem; color: var(--muted); margin: 12px 0 5px; }
+  label small { color: var(--muted); opacity: 0.8; }
+  input[type=text], select, textarea {
+    width: 100%; padding: 9px 11px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    font-size: 0.94rem; font-family: inherit;
+  }
+  input[type=color] { width: 44px; height: 34px; border: none; border-radius: 8px; padding: 0; background: none; cursor: pointer; }
+  textarea { min-height: 76px; resize: vertical; }
+  .color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .color-cell { display: flex; align-items: center; gap: 8px; }
+  .color-cell input[type=text] { flex: 1; font-family: ui-monospace, monospace; }
+  .presets { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+  .presets button {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    padding: 7px 12px; border-radius: 999px; cursor: pointer; font-size: 0.82rem;
+  }
+  .presets button:hover, .presets button.active { border-color: var(--primary); color: var(--primary); }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip {
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px;
+    padding: 4px 10px; font-size: 0.8rem; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .chip button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.95rem; padding: 0; }
+  .add-btn {
+    background: transparent; border: 1px dashed var(--primary); color: var(--primary);
+    padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-top: 10px;
+  }
+  .add-btn:hover { background: rgba(14,165,233,0.08); }
+  .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  @media (max-width: 640px) { .two-cols { grid-template-columns: 1fr; } }
+  .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  button.primary {
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: #fff; border: none; padding: 12px 22px; border-radius: 10px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button.ghost {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: 10px; cursor: pointer; font-size: 0.9rem;
+  }
+  .result { margin-top: 18px; }
+  .result pre {
+    background: #0b1220; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; overflow: auto; max-height: 380px; font-size: 0.78rem;
+    color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .error { color: var(--danger); font-size: 0.86rem; margin-top: 10px; white-space: pre-wrap; }
+  .ok { color: var(--ok); }
+  .field-row { display: grid; grid-template-columns: 1fr 24px; gap: 8px; align-items: center; }
+  .remove-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.05rem; padding: 6px; }
+  footer { color: var(--muted); font-size: 0.78rem; text-align: center; margin-top: 30px; }
+  .tag { display:inline-block; background: var(--panel-2); color: var(--accent); border:1px solid var(--border); border-radius:6px; padding:1px 7px; font-size:0.72rem; margin-bottom:10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Archon</h1>
+    <p>Renseignez le cahier des charges de votre application. Le formulaire exporte une spec <b>validée</b> prête pour <code>archon --spec</code>.</p>
+  </header>
+
+  <form id="spec-form" autocomplete="off">
+    <section>
+      <h2>1 · Identité & promesse</h2>
+      <label>Nom commercial de l'application</label>
+      <input type="text" id="displayName" placeholder="Ex: Telescope" required>
+      <label>Nom technique <small>(slug)</small></label>
+      <input type="text" id="name" placeholder="Ex: telescope">
+      <label>Baseline / promesse principale</label>
+      <input type="text" id="baseline" placeholder="Ex: Anticiper les pannes avant qu'elles n'arrivent." required>
+      <label>Type d'interface</label>
+      <select id="interfaceKind">
+        <option value="mobile-first">Mobile-first (responsive desktop)</option>
+        <option value="dashboard-desktop" selected>Dashboard desktop / écrans larges</option>
+        <option value="pwa">PWA (installe, offline)</option>
+        <option value="native">Application native</option>
+        <option value="responsive">Responsive neutre</option>
+      </select>
+    </section>
+
+    <section>
+      <h2>2 · Palette graphique</h2>
+      <div class="presets" id="palettePresets">
+        <button type="button" data-preset="dark" class="active">Dark natif</button>
+        <button type="button" data-preset="light">Light épuré</button>
+        <button type="button" data-preset="none">Personnaliser</button>
+      </div>
+      <div class="color-grid" id="paletteGrid">
+        <div class="color-cell"><input type="color" data-color="primary"><input type="text" data-color="primary" value="#0ea5e9"></div>
+        <div class="color-cell"><input type="color" data-color="secondary"><input type="text" data-color="secondary" value="#8b5cf6"></div>
+        <div class="color-cell"><input type="color" data-color="background"><input type="text" data-color="background" value="#0f172a"></div>
+        <div class="color-cell"><input type="color" data-color="foreground"><input type="text" data-color="foreground" value="#f8fafc"></div>
+        <div class="color-cell"><input type="color" data-color="accent"><input type="text" data-color="accent" value="#f59e0b"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3 · Personas cibles</h2>
+      <div id="personas"></div>
+      <button type="button" class="add-btn" id="addPersona">+ Ajouter un persona</button>
+    </section>
+
+    <section>
+      <h2>4 · Fonctionnalités clés (MVP) <small style="color:var(--muted)">3 à 5 maximum</small></h2>
+      <div id="features"></div>
+      <button type="button" class="add-btn" id="addFeature">+ Ajouter une fonctionnalité</button>
+      <div class="error" id="featuresError" hidden></div>
+    </section>
+
+    <section>
+      <h2>5 · Parcours utilisateur principal</h2>
+      <label>Point d'entrée</label>
+      <input type="text" id="journeyEntry" placeholder="Ex: Connexion à la console" required>
+      <label>Étapes (une par ligne)</label>
+      <textarea id="journeySteps" placeholder="Chargement du tableau de bord…"></textarea>
+      <label>Action clé finale</label>
+      <input type="text" id="targetAction" placeholder="Ex: Créer une alerte de détection" required>
+    </section>
+
+    <section>
+      <h2>6 · Stack technique</h2>
+      <div class="two-cols">
+        <div>
+          <label>Framework</label>
+          <input type="text" id="framework" value="Next.js">
+        </div>
+        <div>
+          <label>Langage</label>
+          <select id="language">
+            <option selected>TypeScript</option>
+            <option>JavaScript</option>
+          </select>
+        </div>
+        <div>
+          <label>Style / CSS</label>
+          <input type="text" id="styling" value="Tailwind CSS">
+        </div>
+        <div>
+          <label>ORM</label>
+          <select id="orm">
+            <option selected>Prisma</option>
+            <option>Drizzle</option>
+            <option>TypeORM</option>
+            <option>SQLAlchemy</option>
+          </select>
+        </div>
+        <div>
+          <label>Base de données</label>
+          <select id="database">
+            <option selected>SQLite</option>
+            <option>PostgreSQL</option>
+            <option>Supabase</option>
+            <option>MySQL</option>
+            <option>MongoDB</option>
+          </select>
+        </div>
+        <div>
+          <label>Authentification</label>
+          <input type="text" id="auth" value="NextAuth (credentials)">
+        </div>
+      </div>
+      <label>Intégrations tierces <small>(une par ligne)</small></label>
+      <textarea id="integrations" placeholder="API de métrique…"></textarea>
+    </section>
+
+    <section>
+      <h2>7 · Contraintes <small style="color:var(--muted)">une par ligne</small></h2>
+      <textarea id="constraints" placeholder="Dark mode natif uniquement…"></textarea>
+    </section>
+
+    <div class="actions">
+      <button type="submit" class="primary">Générer la spec YAML</button>
+      <button type="button" class="ghost" id="downloadBtn" disabled>Télécharger la spec</button>
+    </div>
+    <div class="result">
+      <div class="error" id="formError" hidden></div>
+      <div class="ok" id="formOk" hidden></div>
+      <pre id="yamlPreview" hidden></pre>
+    </div>
+  </form>
+
+  <footer>Archon · orchestrateur multi-agents OpenCode — interface locale, aucun envoi externe.</footer>
+</div>
+
+<script>
+(function () {
+  var PRESETS = {
+    dark: { primary:"#0ea5e9", secondary:"#8b5cf6", background:"#0f172a", foreground:"#f8fafc", accent:"#f59e0b" },
+    light:{ primary:"#2563eb", secondary:"#7c3aed", background:"#ffffff", foreground:"#0f172a", accent:"#f59e0b" }
+  };
+
+  var state = {
+    personas: [{ label:"", needs:[""] }],
+    features: [{ label:"", description:"" }]
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  function applyPreset(name) {
+    if (!PRESETS[name]) return;
+    document.querySelectorAll("#paletteGrid [data-color]").forEach(function (el) {
+      var key = el.getAttribute("data-color");
+      if (PRESETS[name][key]) el.value = PRESETS[name][key];
+    });
+    document.querySelectorAll("#palettePresets button").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.preset === name);
+    });
+  }
+  document.querySelectorAll("#palettePresets button").forEach(function (b) {
+    b.addEventListener("click", function () { applyPreset(b.dataset.preset); });
+  });
+  // Synchronisation couleur ↔ hex (par clé de token)
+  document.querySelectorAll("#paletteGrid [data-color]").forEach(function (el) {
+    el.addEventListener("input", function () {
+      var key = el.getAttribute("data-color");
+      var mate = document.querySelector('#paletteGrid input[data-color="'+key+'"]:not([type="color"])');
+      var swatch = document.querySelector('#paletteGrid input[type="color"][data-color="'+key+'"]');
+      if (el.type === "color") {
+        if (mate) mate.value = el.value;
+      } else if (/^#[0-9a-fA-F]{6}$/.test(el.value)) {
+        if (swatch) swatch.value = el.value;
+      }
+    });
+  });
+
+  function renderPersonas() {
+    var box = $("personas"); box.innerHTML = "";
+    state.personas.forEach(function (p, i) {
+      var row = document.createElement("div");
+      row.innerHTML =
+        '<div><label>Persona #'+(i+1)+' <small>(label)</small></label>' +
+        '<div class="field-row"><input type="text" data-p="label" value="'+esc(p.label)+'" placeholder="Ex: Opérateur d\'exploitation">' +
+        '<button type="button" class="remove-btn" data-p="del" title="Supprimer">✕</button></div>' +
+        '<label><small>Besoins (virgulés)</small></label>' +
+        '<input type="text" data-p="needs" value="'+esc(p.needs.join(", "))+'" placeholder="Supervision temps réel, alertes fiables"></div>';
+      box.appendChild(row);
+      row.querySelector('[data-p="label"]').addEventListener("input", function (e) { p.label = e.target.value; });
+      row.querySelector('[data-p="needs"]').addEventListener("input", function (e) { p.needs = e.target.value.split(",").map(function(s){return s.trim();}).filter(Boolean); });
+      row.querySelector('[data-p="del"]').addEventListener("click", function () {
+        state.personas.splice(i, 1); renderPersonas();
+      });
+    });
+  }
+  $("addPersona").addEventListener("click", function () {
+    state.personas.push({ label: "", needs: [] }); renderPersonas();
+  });
+
+  function renderFeatures() {
+    var box = $("features"); box.innerHTML = "";
+    state.features.forEach(function (f, i) {
+      var row = document.createElement("div");
+      row.innerHTML =
+        '<div><div class="field-row"><label style="flex:1">Fonctionnalité #'+(i+1)+' <small>(label)</small></label>' +
+        '<button type="button" class="remove-btn" data-f="del" title="Supprimer">✕</button></div>' +
+        '<input type="text" data-f="label" value="'+esc(f.label)+'" placeholder="Ex: Alerting prédictif">' +
+        '<label><small>Description</small></label>' +
+        '<input type="text" data-f="description" value="'+esc(f.description)+'" placeholder="Ex: Détection de dérives avant panne."></div>';
+      box.appendChild(row);
+      row.querySelector('[data-f="label"]').addEventListener("input", function (e) { f.label = e.target.value; });
+      row.querySelector('[data-f="description"]').addEventListener("input", function (e) { f.description = e.target.value; });
+      row.querySelector('[data-f="del"]').addEventListener("click", function () {
+        state.features.splice(i, 1); renderFeatures();
+      });
+    });
+    $("addFeature").disabled = state.features.length >= 5;
+    if (state.features.length >= 5) $("featuresError").hidden = false;
+    else $("featuresError").hidden = true;
+  }
+  $("addFeature").addEventListener("click", function () {
+    if (state.features.length < 5) { state.features.push({ label:"", description:"" }); renderFeatures(); }
+  });
+
+  function slugify(s) {
+    return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  function collect() {
+    var colors = {};
+    document.querySelectorAll("#paletteGrid [data-color]").forEach(function (el) {
+      colors[el.getAttribute("data-color")] = el.value;
+    });
+    return {
+      name: $("name").value || slugify($("displayName").value),
+      displayName: $("displayName").value,
+      baseline: $("baseline").value,
+      interfaceKind: $("interfaceKind").value,
+      palette: colors,
+      personas: state.personas.filter(function (p) { return p.label; }).map(function (p) {
+        return { id: slugify(p.label), label: p.label, needs: p.needs };
+      }),
+      features: state.features.filter(function (f) { return f.label; }).map(function (f) {
+        return { id: slugify(f.label), label: f.label, description: f.description };
+      }),
+      journey: {
+        entry: $("journeyEntry").value,
+        steps: ($("journeySteps").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean),
+        targetAction: $("targetAction").value
+      },
+      stack: {
+        framework: $("framework").value,
+        language: $("language").value,
+        styling: $("styling").value,
+        orm: $("orm").value,
+        database: $("database").value,
+        auth: $("auth").value,
+        integrations: ($("integrations").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean)
+      },
+      constraints: ($("constraints").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean)
+    };
+  }
+
+  var lastYaml = null, lastFile = null;
+
+  $("spec-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var errBox = $("formError"), okBox = $("formOk"), pre = $("yamlPreview");
+    errBox.hidden = true; okBox.hidden = true;
+    try {
+      var res = await fetch("/api/spec", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(collect())
+      });
+      var data = null;
+      try { data = await res.json(); } catch (parseErr) { /* réponse non-JSON */ }
+      if (!res.ok) {
+        var detail = (data && data.error) || ("HTTP " + res.status);
+        errBox.textContent = res.status === 413
+          ? "Spec trop volumineuse (" + detail + ")."
+          : "Validation échouée :\n" + detail;
+        errBox.hidden = false; pre.hidden = true;
+        return;
+      }
+      lastYaml = data.yaml; lastFile = data.file;
+      pre.textContent = data.yaml; pre.hidden = false;
+      okBox.textContent = "Spec valide – " + data.file + " prête à l'emploi.";
+      okBox.hidden = false;
+      $("downloadBtn").disabled = false;
+    } catch (err) {
+      errBox.textContent = "Erreur réseau : " + err.message;
+      errBox.hidden = false;
+    }
+  });
+
+  $("downloadBtn").addEventListener("click", function () {
+    if (!lastYaml) return;
+    var blob = new Blob([lastYaml], { type: "text/yaml" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = lastFile;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  renderPersonas();
+  renderFeatures();
+})();
+</script>
+</body>
+</html>

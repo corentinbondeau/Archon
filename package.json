@@ -1,0 +1,37 @@
+{
+  "name": "archon",
+  "version": "0.1.0",
+  "description": "Orchestrateur multi-agents pour générer des applications web de bout en bout via OpenCode",
+  "type": "module",
+  "bin": {
+    "archon": "./dist/cli/bin/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && npm run build:web",
+    "build:web": "node -e \"const fs=require('node:fs'); fs.mkdirSync('dist/web',{recursive:true}); fs.mkdirSync('public',{recursive:true}); fs.copyFileSync('src/web/index.html','dist/web/index.html'); fs.copyFileSync('src/web/index.html','public/index.html')\"",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsx src/cli/bin/index.ts",
+    "start": "node dist/cli/bin/index.js",
+    "init": "node dist/cli/bin/index.js init",
+    "web": "node dist/cli/bin/index.js web",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "yaml": "^2.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

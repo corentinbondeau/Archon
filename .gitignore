@@ -1,0 +1,19 @@
+node_modules/
+dist/
+coverage/
+
+# État persistant des runs Archon
+.archon/
+*.archon-state.json
+
+# Sortie web statique Vercel (générée par build:web)
+public/
+
+# Jeu d'environnement
+.env
+.env.local
+
+# Vercel
+.vercel/
+.vercel
+.env*
