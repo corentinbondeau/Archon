@@ -298,9 +298,9 @@
       row.innerHTML =
         '<div><div class="field-row"><label style="flex:1">Fonctionnalité #'+(i+1)+' <small>(label)</small></label>' +
         '<button type="button" class="remove-btn" data-f="del" title="Supprimer">✕</button></div>' +
-        '<input type="text" data-f="label" value="'+esc(f.label)+'" placeholder="Ex: Alerting prédictif">' +
+        '<input type="text" data-f="label" value="'+esc(f.label)+'" placeholder="Ex: Alerting prédictif" required>' +
         '<label><small>Description</small></label>' +
-        '<input type="text" data-f="description" value="'+esc(f.description)+'" placeholder="Ex: Détection de dérives avant panne."></div>';
+        '<input type="text" data-f="description" value="'+esc(f.description)+'" placeholder="Ex: Détection de dérives avant panne." required></div>';
       box.appendChild(row);
       row.querySelector('[data-f="label"]').addEventListener("input", function (e) { f.label = e.target.value; });
       row.querySelector('[data-f="description"]').addEventListener("input", function (e) { f.description = e.target.value; });
@@ -335,9 +335,11 @@
       personas: state.personas.filter(function (p) { return p.label; }).map(function (p) {
         return { id: slugify(p.label), label: p.label, needs: p.needs };
       }),
-      features: state.features.filter(function (f) { return f.label; }).map(function (f) {
-        return { id: slugify(f.label), label: f.label, description: f.description };
-      }),
+      features: state.features
+        .filter(function (f) { return f.label && f.description && f.description.trim(); })
+        .map(function (f) {
+          return { id: slugify(f.label), label: f.label, description: f.description };
+        }),
       journey: {
         entry: $("journeyEntry").value,
         steps: ($("journeySteps").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean),
