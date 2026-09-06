@@ -134,7 +134,8 @@ export type AgentName =
   | "backend"
   | "frontend"
   | "qa"
-  | "devops";
+  | "devops"
+  | "deploy";
 
 /** Résultat produit par un agent à la fin de son exécution. */
 export interface AgentOutput {

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { ContextManager } from "./ContextManager.js";
 import { AgentHalt, OrchestratorError } from "./errors.js";
 import type { AgentName, AgentOutput } from "./types.js";
-import type { BaseAgent } from "../agents/BaseAgent.js";
+import type { BaseAgent, DeployOptions } from "../agents/BaseAgent.js";
 import { OpenCodeRunner } from "../adapters/OpenCodeRunner.js";
 
 /** Ordre canonique du pipeline multi-agents. */
@@ -13,6 +13,7 @@ export const DEFAULT_PIPELINE: AgentName[] = [
   "frontend",
   "qa",
   "devops",
+  "deploy",
 ];
 
 /** Rapport agrégé d'un run complet du pipeline. */
@@ -33,10 +34,12 @@ export interface OrchestratorResult {
 }
 
 export interface OrchestratorOptions {
-  /** Ordre des agents ; défaut: architect → backend → frontend → qa → devops. */
+  /** Ordre des agents ; défaut: architect → backend → frontend → qa → devops → deploy. */
   pipeline?: AgentName[];
   /** Nombre maximal de tentatives d'un agent avant arrêt. */
   maxAgentRetries?: number;
+  /** Options de déploiement injectées à l'agent `deploy`. */
+  deploy?: DeployOptions;
   /** Adaptateur OpenCode (injectable pour tests avec faux runner). */
   runner?: OpenCodeRunner;
   /** Hooks de cycle de vie (logs progressifs). */
@@ -62,6 +65,7 @@ export class Orchestrator {
   readonly context: ContextManager;
   private readonly pipeline: AgentName[];
   private readonly maxAgentRetries: number;
+  private readonly deployOptions: DeployOptions | undefined;
   private readonly runner: OpenCodeRunner;
   private readonly hooks: NonNullable<OrchestratorOptions["hooks"]>;
   private readonly agents: ReadonlyMap<AgentName, BaseAgent>;
@@ -75,6 +79,7 @@ export class Orchestrator {
   ) {
     this.pipeline = options.pipeline ?? DEFAULT_PIPELINE;
     this.maxAgentRetries = options.maxAgentRetries ?? 1;
+    this.deployOptions = options.deploy;
     this.runner = options.runner ?? new OpenCodeRunner();
     this.hooks = options.hooks ?? {};
     this.context = context;
@@ -176,7 +181,8 @@ export class Orchestrator {
     const completed = this.failed.length === 0 && step >= this.pipeline.length;
     if (completed) {
       this.context.markCompleted();
-      this.context.log("devops", "info", "Run terminé : pipeline complet.");
+      const lastAgent = this.pipeline[this.pipeline.length - 1] ?? "devops";
+      this.context.log(lastAgent, "info", "Run terminé : pipeline complet.");
 
       await this.context.persist();
     }
@@ -211,6 +217,7 @@ export class Orchestrator {
         context: this.context,
         runner: this.runner,
         humanInstructions: this.context.getHumanInstructions(),
+        ...(this.deployOptions ? { deploy: this.deployOptions } : {}),
       });
       lastOutput = output;
 

@@ -34,6 +34,8 @@ interface CliArgs {
   retries: number;
   port: number;
   verbose: boolean;
+  deploy: boolean;
+  remote: string | undefined;
   help: boolean;
 }
 
@@ -56,6 +58,8 @@ Options :
   --retry <n>           Nombre maximal de tentatives par agent (défaut : 1)
   --auto                Autoriser automatiquement les permissions OpenCode (--auto)
   --fresh               Ignorer l'état persisté et repartir de l'étape 1
+  --deploy              Déployer l'application après génération (Vercel ou Docker selon la stack)
+  --remote <url>        Dépôt git distant à créer/pousser (déclenche l'auto-deploy PaaS)
   --verbose             Afficher le prompt transmis à chaque agent
   -h, --help            Afficher cette aide
 `.trim();
@@ -80,6 +84,8 @@ function parseArgs(argv: string[]): CliArgs {
     retries: 1,
     port: DEFAULTS.port,
     verbose: false,
+    deploy: false,
+    remote: undefined,
     help: false,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -123,6 +129,12 @@ function parseArgs(argv: string[]): CliArgs {
         break;
       case "--verbose":
         args.verbose = true;
+        break;
+      case "--deploy":
+        args.deploy = true;
+        break;
+      case "--remote":
+        args.remote = next();
         break;
       case "-h":
       case "--help":
@@ -182,6 +194,8 @@ async function runPipeline(specPath: string, args: CliArgs): Promise<void> {
     autoApprove: args.auto,
   });
 
+  const agents = createDefaultAgents();
+
   console.log(paint.step(`Projet     : ${spec.displayName} — ${spec.baseline}`));
   console.log(paint.dim(`Répertoire : ${projectDir}`));
   console.log(
@@ -196,12 +210,20 @@ async function runPipeline(specPath: string, args: CliArgs): Promise<void> {
   );
   console.log("");
 
-  const orchestrator = new Orchestrator(createDefaultAgents(), context, {
+  const orchestrator = new Orchestrator(agents, context, {
     runner,
     maxAgentRetries: args.retries,
+    ...(args.deploy || args.remote
+      ? {
+          deploy: {
+            enabled: args.deploy,
+            ...(args.remote ? { remoteUrl: args.remote } : {}),
+          },
+        }
+      : {}),
     hooks: {
       onStepStart: (step, agent) => {
-        console.log(paint.step(`Étape ${step + 1}/5 — ${agent}`));
+        console.log(paint.step(`Étape ${step + 1}/${agents.length} — ${agent}`));
       },
       onStepEnd: (_step, _agent, output) => {
         printAgentSummary(output, args.verbose);

@@ -1,4 +1,4 @@
-export type { BaseAgent, AgentInput } from "./BaseAgent.js";
+export type { BaseAgent, AgentInput, DeployOptions } from "./BaseAgent.js";
 export { AbstractAgent } from "./AbstractAgent.js";
 export {
   renderPrompt,
@@ -11,4 +11,5 @@ export { BackendAgent } from "./BackendAgent.js";
 export { FrontendAgent } from "./FrontendAgent.js";
 export { QaAgent } from "./QaAgent.js";
 export { DevOpsAgent } from "./DevOpsAgent.js";
+export { DeployAgent } from "./DeployAgent.js";
 export { createDefaultAgents } from "./factory.js";

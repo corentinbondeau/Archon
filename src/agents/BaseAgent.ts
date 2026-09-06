@@ -2,6 +2,14 @@ import type { AgentOutput, ProjectSpec } from "../core/types.js";
 import type { ContextManager } from "../core/ContextManager.js";
 import type { OpenCodeRunner } from "../adapters/OpenCodeRunner.js";
 
+/** Options de déploiement injectées à l'agent `deploy` du pipeline. */
+export interface DeployOptions {
+  /** true pour déclencher le déploiement réel après la préparation. */
+  enabled: boolean;
+  /** Dépôt git distant à créer et pousser (déclenche l'auto-deploy PaaS). */
+  remoteUrl?: string;
+}
+
 /**
  * Options d'exécution communes à tous les agents : ils reçoivent le contexte
  * partagé et l'adaptateur OpenCode pour générer/modifier des fichiers.
@@ -12,6 +20,8 @@ export interface AgentInput {
   runner: OpenCodeRunner;
   /** Instructions humaines extraites du fichier de spec (si markdown). */
   humanInstructions: string;
+  /** Options de déploiement, consommées par l'agent `deploy`. */
+  deploy?: DeployOptions;
 }
 
 /**
@@ -20,7 +30,13 @@ export interface AgentInput {
  */
 export interface BaseAgent {
   /** Nom canonique de l'agent, utilisé comme clé de pipeline. */
-  readonly name: "architect" | "backend" | "frontend" | "qa" | "devops";
+  readonly name:
+    | "architect"
+    | "backend"
+    | "frontend"
+    | "qa"
+    | "devops"
+    | "deploy";
 
   /**
    * Exécute l'agent.

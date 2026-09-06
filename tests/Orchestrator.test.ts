@@ -61,13 +61,13 @@ async function buildOrchestrator(options: {
     humanInstructions,
     true,
   );
-  return new Orchestrator(createDefaultAgents(), context, {
+  return new Orchestrator(createDefaultAgents({ deployDryRun: true }), context, {
     runner: options.runner,
   });
 }
 
 describe("Orchestrator", () => {
-  it("exécute les 5 agents dans l'ordre et marque la fin de run", async () => {
+  it("exécute les agents du pipeline dans l'ordre et marque la fin de run", async () => {
     const runner = new FakeRunner();
     const output = await mkdtemp(join(tmpdir(), "archon-ok-"));
     const orch = await buildOrchestrator({ runner, projectDir: output });
@@ -75,6 +75,8 @@ describe("Orchestrator", () => {
     const result = await orch.run();
 
     expect(result.completed).toBe(true);
+    // Les 5 agents de génération passent par OpenCode ; `deploy` s'exécute
+    // en dernier sans invoquer le runner (opération déterministe).
     expect(runner.calls).toEqual([
       "architect",
       "backend",
@@ -82,7 +84,15 @@ describe("Orchestrator", () => {
       "qa",
       "devops",
     ]);
-    expect(result.stats.agentsRun).toBe(5);
+    expect(result.outputs.map((o) => o.agent)).toEqual([
+      "architect",
+      "backend",
+      "frontend",
+      "qa",
+      "devops",
+      "deploy",
+    ]);
+    expect(result.stats.agentsRun).toBe(6);
     expect(result.stats.filesTouched).toBeGreaterThan(0);
     expect(orch.context.isCompleted()).toBe(true);
   });
