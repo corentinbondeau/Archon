@@ -1,0 +1,35 @@
+{
+  "name": "demo-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Demo App — Démonstration du lancement automatique (Next.js + TypeScript + Tailwind + Prisma/SQLite + NextAuth).",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "npm run dev -w apps/web",
+    "build": "npm run build -w apps/web",
+    "start": "npm run start -w apps/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "DATABASE_URL=\"file:./dev.db\" prisma generate --schema packages/database/prisma/schema.prisma",
+    "db:push": "DATABASE_URL=\"file:./dev.db\" prisma db push --schema packages/database/prisma/schema.prisma",
+    "db:migrate": "npm run db:migrate -w packages/database",
+    "db:migrate:deploy": "npm run db:migrate:deploy -w packages/database",
+    "db:seed": "DATABASE_URL=\"file:./dev.db\" tsx scripts/seed.ts",
+    "db:studio": "npm run db:studio -w packages/database",
+    "postinstall": "npm run db:generate"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^2.4.3",
+    "prisma": "^6.19.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3"
+  }
+}

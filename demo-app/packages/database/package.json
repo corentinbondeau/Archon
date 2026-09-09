@@ -1,0 +1,27 @@
+{
+  "name": "@demo-app/database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Accès aux données de la Demo App (Démonstration du lancement automatique) — Prisma + SQLite.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:validate": "prisma validate",
+    "db:studio": "prisma studio",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.0",
+    "prisma": "^6.19.3",
+    "typescript": "^5.9.3"
+  }
+}

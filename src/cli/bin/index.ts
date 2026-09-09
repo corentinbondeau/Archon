@@ -44,7 +44,7 @@ Archon — Orchestrateur multi-agents OpenCode.
 
 Usage :
   archon init [--out <spec>] [--run] [options]   Assistant interactif du cahier des charges
-  archon web [--port <n>]                        Formulaire web local (export de spec)
+  archon web [--port <n>]                        Formulaire web local (génération auto)
   archon --spec <chemin> [options]                Lancement direct du pipeline
 
 Options :
@@ -277,9 +277,22 @@ async function cmdInit(args: CliArgs): Promise<void> {
   }
 }
 
-/** Commande `web` : sert le formulaire local et l'endpoint d'export. */
+/** Commande `web` : sert le formulaire local ; lance le pipeline auto après connexion GitHub + choix du dépôt. */
 async function cmdWeb(args: CliArgs): Promise<void> {
-  const handle = await startWebServer({ port: args.port });
+  const handle = await startWebServer({
+    port: args.port,
+    autoLaunch: true,
+    pipeline: {
+      dir: args.dir,
+      model: args.model,
+      opencodeAgent: args.opencodeAgent,
+      auto: args.auto,
+      fresh: args.fresh,
+      retries: args.retries,
+      deploy: args.deploy,
+      remote: args.remote,
+    },
+  });
   console.log(paint.step(`Formulaire Archon : http://localhost:${handle.port}`));
   console.log(paint.dim("Appuyez sur Ctrl+C pour arrêter le serveur."));
 }

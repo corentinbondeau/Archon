@@ -1,0 +1,30 @@
+# Dépendances
+node_modules/
+.pnp
+.pnp.js
+
+# Builds Next.js / packages
+.next/
+out/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Base SQLite locale
+*.db
+*.db-journal
+prisma/*.db
+
+# Environnements (les fichiers d'exemple restent versionnés)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Données de vérification & logs
+.coverage/
+coverage/
+*.log
+
+# Vercel
+.vercel/

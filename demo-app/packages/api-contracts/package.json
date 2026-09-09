@@ -1,0 +1,22 @@
+{
+  "name": "@demo-app/api-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contrats d'API de la Demo App (Démonstration du lancement automatique) — schémas Zod partagés.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
+  }
+}

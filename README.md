@@ -71,13 +71,21 @@ node dist/cli/bin/index.js init --run --out app.yaml   # écrit et lance sans co
 
 ### 2 · Formulaire web (`archon web`)
 
-Serve local (zéro dépendance) : formulaire complet de saisie, prévisualisation
-YAML et export/téléchargement de la spec validée.
+Service local (zéro dépendance) : formulaire complet de saisie du cahier des
+charges, **connexion GitHub en device flow** (vos tokens Copilot restent sur
+cette machine et pilotent OpenCode), choix ou création du **dépôt GitHub cible**,
+puis **génération automatique du pipeline**. Un **commit est proposé après
+chaque étape** et poussé vers le dépôt cible ; la progression s'affiche en
+direct dans la page (barre animée + phrases d'activité, polling de
+`/api/run/:id`). La spec est persistée dans `.archon/web/specs/`.
 
 ```bash
 node dist/cli/bin/index.js web --port 8765
 # http://localhost:8765
 ```
+
+Les options de pipeline (`--model`, `--auto`, `--dir`, `--deploy`…) passées à
+`web` sont appliquées au lancement automatique.
 
 ### 3 · Lancement direct
 
@@ -178,9 +186,10 @@ src/
 ├── adapters/
 │   └── OpenCodeRunner.ts # Wrapper `opencode run --format json`
 ├── web/
-│   ├── server.ts         # Serveur HTTP local (formulaire + export YAML)
+│   ├── server.ts         # Serveur HTTP local (formulaire + GitHub + pipeline auto)
+│   ├── githubAuth.ts     # Device flow GitHub + API (profil, dépôts, création)
 │   ├── specHandler.ts    # Logique d'export spec partagée (local + Vercel)
-│   └── index.html        # Formulaire du cahier des charges
+│   └── index.html        # Formulaire du cahier des charges (FR, progression animée)
 └── cli/
     ├── prompts.ts        # Primitives d'invite interactive (zéro dép.)
     ├── wizard.ts         # Assistant pas-à-pas `init`

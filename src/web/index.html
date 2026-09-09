@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Archon — Rencontrer le cahier des charges</title>
+<title>Archon — Générer votre application</title>
 <style>
   :root {
     --primary: #0ea5e9;
@@ -38,8 +38,8 @@
     border-radius: 12px; padding: 20px; margin-bottom: 18px;
   }
   section h2 {
-    font-size: 1rem; margin: 0 0 14px; color: var(--primary); text-transform: uppercase;
-    letter-spacing: 0.08em; font-size: 0.78rem;
+    font-size: 0.78rem; margin: 0 0 14px; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 0.08em;
   }
   label { display: block; font-size: 0.86rem; color: var(--muted); margin: 12px 0 5px; }
   label small { color: var(--muted); opacity: 0.8; }
@@ -59,12 +59,8 @@
     padding: 7px 12px; border-radius: 999px; cursor: pointer; font-size: 0.82rem;
   }
   .presets button:hover, .presets button.active { border-color: var(--primary); color: var(--primary); }
-  .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .chip {
-    background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px;
-    padding: 4px 10px; font-size: 0.8rem; display: inline-flex; gap: 6px; align-items: center;
-  }
-  .chip button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.95rem; padding: 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 24px; gap: 8px; align-items: center; }
+  .remove-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.05rem; padding: 6px; }
   .add-btn {
     background: transparent; border: 1px dashed var(--primary); color: var(--primary);
     padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; margin-top: 10px;
@@ -79,30 +75,79 @@
     font-size: 0.95rem; font-weight: 600; cursor: pointer;
   }
   button.primary:hover { filter: brightness(1.1); }
+  button.primary:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
   button.ghost {
     background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
     padding: 12px 18px; border-radius: 10px; cursor: pointer; font-size: 0.9rem;
   }
-  .result { margin-top: 18px; }
-  .result pre {
-    background: #0b1220; border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px; overflow: auto; max-height: 380px; font-size: 0.78rem;
-    color: #cbd5e1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
   .error { color: var(--danger); font-size: 0.86rem; margin-top: 10px; white-space: pre-wrap; }
   .ok { color: var(--ok); }
-  .field-row { display: grid; grid-template-columns: 1fr 24px; gap: 8px; align-items: center; }
-  .remove-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.05rem; padding: 6px; }
+
+  /* Connexion GitHub */
+  #githubBox .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  #devicePanel { display: none; margin-top: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); }
+  #devicePanel.show { display: block; animation: fadeIn .3s ease; }
+  #userCodeLine { font-family: ui-monospace, monospace; font-size: 1.5rem; letter-spacing: 0.25em; font-weight: 700; color: var(--accent); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .gh-badge { display: inline-flex; gap: 8px; align-items: center; background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; font-size: 0.88rem; }
+  .gh-badge img { width: 22px; height: 22px; border-radius: 50%; background: #475569; }
+
+  /* Progression pipeline */
+  #progressPanel { display: none; margin-top: 18px; }
+  #progressPanel.show { display: block; animation: fadeIn .3s ease; }
+  #agentLine { font-size: 1.05rem; font-weight: 600; margin: 4px 0 2px; min-height: 1.5em; }
+  #agentDetail { color: var(--muted); font-size: 0.88rem; margin: 0 0 10px; min-height: 1.3em; }
+  .bar-track { height: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 999px; transition: width .5s ease;
+  }
+  .bar-meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.78rem; margin-top: 6px; }
+  #stepsList { margin: 14px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  #stepsList li { display: flex; gap: 8px; align-items: center; font-size: 0.86rem; color: var(--muted); }
+  #stepsList li .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex: 0 0 auto; }
+  #stepsList li.done { color: var(--text); }
+  #stepsList li.done .dot { background: var(--ok); }
+  #stepsList li.active { color: var(--text); font-weight: 600; }
+  #stepsList li.active .dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+  #stepsList li .commit { font-family: ui-monospace, monospace; font-size: 0.76rem; color: var(--ok); }
+  #runLog { margin-top: 12px; background: #0b1220; border: 1px solid var(--border); border-radius: 10px; padding: 12px; max-height: 200px; overflow: auto; font-size: 0.78rem; color: #cbd5e1; display: none; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
   footer { color: var(--muted); font-size: 0.78rem; text-align: center; margin-top: 30px; }
-  .tag { display:inline-block; background: var(--panel-2); color: var(--accent); border:1px solid var(--border); border-radius:6px; padding:1px 7px; font-size:0.72rem; margin-bottom:10px; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Archon</h1>
-    <p>Renseignez le cahier des charges de votre application. Le formulaire exporte une spec <b>validée</b> prête pour <code>archon --spec</code>.</p>
+    <p>Décrivez votre application : le pipeline multi-agents <b>génère automatiquement le dépôt GitHub</b> de votre choix, avec un commit par étape. Suivez la progression en direct.</p>
   </header>
+
+  <section id="githubBox">
+    <h2>0 · Connexion GitHub & dépôt cible</h2>
+    <div class="row">
+      <button type="button" class="ghost" id="loginBtn">Se connecter à GitHub</button>
+      <span class="gh-badge" id="ghBadge" hidden><img id="ghAvatar" alt=""> <span id="ghLogin"></span></span>
+    </div>
+    <div id="devicePanel">
+      <p style="margin:0 0 6px">Sur la page GitHub qui va s'ouvrir, saisissez le code suivant&nbsp;:</p>
+      <div id="userCodeLine">••••-••••</div>
+      <p style="margin:10px 0 4px;font-size:0.8rem;color:var(--muted)">
+        Ouvrir <a id="verifyLink" href="#" target="_blank" rel="noopener">la page d'autorisation</a>
+        (ou n'importe quel appareil). En attente de validation…
+      </p>
+    </div>
+    <div style="margin-top:14px">
+      <label>Dépôt GitHub cible <small>— où l'application sera générée et poussée</small></label>
+      <div class="field-row">
+        <input type="text" id="repoInput" placeholder="Ex: mon-organisation/mon-app" disabled>
+        <button type="button" id="createRepoBtn" class="ghost" disabled title="Créer un dépôt privé">Créer</button>
+      </div>
+      <div id="repoSuggest" class="chip-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+    </div>
+    <div class="error" id="githubError" hidden></div>
+  </section>
 
   <form id="spec-form" autocomplete="off">
     <section>
@@ -130,7 +175,7 @@
         <button type="button" data-preset="light">Light épuré</button>
         <button type="button" data-preset="none">Personnaliser</button>
       </div>
-      <div class="color-grid" id="paletteGrid">
+      <div class="color-grid" id="paletteGrid" style="opacity:1">
         <div class="color-cell"><input type="color" data-color="primary"><input type="text" data-color="primary" value="#0ea5e9"></div>
         <div class="color-cell"><input type="color" data-color="secondary"><input type="text" data-color="secondary" value="#8b5cf6"></div>
         <div class="color-cell"><input type="color" data-color="background"><input type="text" data-color="background" value="#0f172a"></div>
@@ -214,17 +259,21 @@
     </section>
 
     <div class="actions">
-      <button type="submit" class="primary">Générer la spec YAML</button>
-      <button type="button" class="ghost" id="downloadBtn" disabled>Télécharger la spec</button>
+      <button type="submit" class="primary" id="submitBtn" disabled>Générer l'application</button>
     </div>
-    <div class="result">
-      <div class="error" id="formError" hidden></div>
-      <div class="ok" id="formOk" hidden></div>
-      <pre id="yamlPreview" hidden></pre>
+    <div class="error" id="formError" hidden></div>
+
+    <div id="progressPanel">
+      <div id="agentLine">Démarrage du pipeline…</div>
+      <div id="agentDetail">Préparation des agents et du dépôt cible.</div>
+      <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+      <div class="bar-meta"><span id="barCount">Étape 0 / 6</span><span id="barCommit"></span></div>
+      <ul id="stepsList"></ul>
+      <pre id="runLog"></pre>
     </div>
   </form>
 
-  <footer>Archon · orchestrateur multi-agents OpenCode — interface locale, aucun envoi externe.</footer>
+  <footer>Archon · orchestrateur multi-agents OpenCode — vos tokens GitHub/Copilot restent sur cette machine.</footer>
 </div>
 
 <script>
@@ -234,14 +283,29 @@
     light:{ primary:"#2563eb", secondary:"#7c3aed", background:"#ffffff", foreground:"#0f172a", accent:"#f59e0b" }
   };
 
+  var AGENT_PHRASES = {
+    architect: ["Rassemble les besoins en une architecture cible.", "Découpe l'application en modules cohérents."],
+    backend:  ["Met en place le modèle de données.", "Câble les routes et l'API du serveur."],
+    frontend: ["Compose les écrans et la navigation.", "Connecte les composants aux données."],
+    qa:       ["Passe au crible la logique métier.", "Corrige les défauts détectés."],
+    devops:   ["Dockerise l'application.", "Prépare les variables d'environnement."],
+    deploy:   ["Valide la livraison finale.", "Pousse le résultat sur GitHub."]
+  };
+  var STEP_NAMES = ["Architecture", "Backend", "Frontend", "QA & recettes", "DevOps", "Déploiement"];
+
   var state = {
     personas: [{ label:"", needs:[""] }],
-    features: [{ label:"", description:"" }]
+    features: [{ label:"", description:"" }],
+    github: { connected:false, pollling:false },
+    runId: null
   };
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function hideError(id) { $(id).textContent = ""; $(id).hidden = true; }
+  function setError(id, msg) { $(id).textContent = msg; $(id).hidden = false; }
 
+  /* ------- Palette ------- */
   function applyPreset(name) {
     if (!PRESETS[name]) return;
     document.querySelectorAll("#paletteGrid [data-color]").forEach(function (el) {
@@ -255,7 +319,6 @@
   document.querySelectorAll("#palettePresets button").forEach(function (b) {
     b.addEventListener("click", function () { applyPreset(b.dataset.preset); });
   });
-  // Synchronisation couleur ↔ hex (par clé de token)
   document.querySelectorAll("#paletteGrid [data-color]").forEach(function (el) {
     el.addEventListener("input", function () {
       var key = el.getAttribute("data-color");
@@ -269,6 +332,7 @@
     });
   });
 
+  /* ------- Personas & fonctionnalités ------- */
   function renderPersonas() {
     var box = $("personas"); box.innerHTML = "";
     state.personas.forEach(function (p, i) {
@@ -309,8 +373,7 @@
       });
     });
     $("addFeature").disabled = state.features.length >= 5;
-    if (state.features.length >= 5) $("featuresError").hidden = false;
-    else $("featuresError").hidden = true;
+    $("featuresError").hidden = state.features.length < 5;
   }
   $("addFeature").addEventListener("click", function () {
     if (state.features.length < 5) { state.features.push({ label:"", description:"" }); renderFeatures(); }
@@ -354,16 +417,195 @@
         auth: $("auth").value,
         integrations: ($("integrations").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean)
       },
-      constraints: ($("constraints").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean)
+      constraints: ($("constraints").value || "").split("\n").map(function (s){ return s.trim(); }).filter(Boolean),
+      repo: $("repoInput").value.trim()
     };
   }
 
-  var lastYaml = null, lastFile = null;
+  /* ------- Connexion GitHub (device flow) ------- */
+  function updateSubmitState() {
+    $("submitBtn").disabled = !(state.github.connected && $("repoInput").value.trim());
+  }
+
+  function pollDevice() {
+    fetch("/api/github/device").then(function (r) { return r.json().catch(function(){ return {}; }); })
+      .then(function (d) {
+        if (d.status === "authorized") {
+          finishLogin(d.user);
+          return;
+        }
+        if (d.status === "pending" || d.status === "slow_down") {
+          setTimeout(pollDevice, (d.status === "slow_down" ? 8000 : 2500));
+        } else {
+          setError("githubError", "Autorisation échouée ou expirée : " + (d.status || "inconnu") + ". Relancez la connexion.");
+          $("loginBtn").disabled = false;
+          $("devicePanel").classList.remove("show");
+        }
+      })
+      .catch(function () {
+        setTimeout(pollDevice, 2500);
+      });
+  }
+
+  function finishLogin(user) {
+    state.github.connected = true;
+    $("devicePanel").classList.remove("show");
+    $("loginBtn").hidden = true;
+    $("ghBadge").hidden = false;
+    $("ghLogin").textContent = user && user.login ? user.login : "Connecté";
+    if (user && user.avatarUrl) $("ghAvatar").src = user.avatarUrl;
+    $("repoInput").disabled = false;
+    loadRepos();
+    updateSubmitState();
+  }
+
+  function loadRepos() {
+    fetch("/api/github/repos")
+      .then(function (r) { return r.json().catch(function(){ return {}; }); })
+      .then(function (d) {
+        var box = $("repoSuggest"); box.innerHTML = "";
+        (d.repos || []).slice(0, 12).forEach(function (repo) {
+          var c = document.createElement("button");
+          c.type = "button"; c.className = "add-btn"; c.style.margin = "0";
+          c.textContent = repo.fullName;
+          c.addEventListener("click", function () {
+            $("repoInput").value = repo.fullName;
+            updateSubmitState();
+          });
+          box.appendChild(c);
+        });
+      })
+      .catch(function () { /* silencieux : saisie manuelle possible */ });
+  }
+
+  $("loginBtn").addEventListener("click", function () {
+    hideError("githubError");
+    $("loginBtn").disabled = true;
+    fetch("/api/github/device", { method: "POST" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (d) {
+        $("userCodeLine").textContent = d.userCode || "••••-••••";
+        $("verifyLink").href = (d.verificationUri || "https://github.com/login/device");
+        $("devicePanel").classList.add("show");
+        pollDevice();
+      })
+      .catch(function (err) {
+        setError("githubError", "Impossible de démarrer la connexion : " + err.message);
+        $("loginBtn").disabled = false;
+      });
+  });
+
+  $("createRepoBtn").addEventListener("click", function () {
+    var input = $("repoInput");
+    var name = input.value.split("/").pop().trim();
+    if (!name) { setError("githubError", "Indiquez d'abord un nom de dépôt (ex: mon-app)."); return; }
+    $("createRepoBtn").disabled = true;
+    fetch("/api/github/repos", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: name, "private": true })
+    })
+      .then(function (r) { return r.json().catch(function(){ return {}; }); })
+      .then(function (d) {
+        if (d && d.repo) input.value = d.repo.fullName;
+        else setError("githubError", (d && d.error) || "Création de dépôt impossible.");
+        loadRepos();
+        updateSubmitState();
+      })
+      .finally(function () { $("createRepoBtn").disabled = !state.github.connected; });
+  });
+
+  $("repoInput").addEventListener("input", updateSubmitState);
+
+  /* ------- Progression pipeline (animation française) ------- */
+  function buildSteps(n) {
+    var ul = $("stepsList"); ul.innerHTML = "";
+    for (var i = 0; i < n; i++) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="dot"></span><span class="name">' + esc(STEP_NAMES[i] || "Étape " + (i+1)) + '</span><span class="commit"></span>';
+      ul.appendChild(li);
+    }
+  }
+
+  function renderProgress(p) {
+    var total = p.totalSteps || STEP_NAMES.length;
+    if (!$("stepsList").children.length) buildSteps(total);
+    var idx = (typeof p.step === "number" && p.step >= 0) ? p.step : -1;
+    var agent = p.agent || "";
+    var phrases = AGENT_PHRASES[agent] || ["Travaille sur cette étape…", "Affine et corrige…"];
+    var phraseIdx = idx < 0 ? 0 : (idx % phrases.length);
+
+    var pct = 0;
+    if (p.status === "done" || p.status === "partial") pct = 100;
+    else if (idx >= 0) pct = Math.round(((idx + 1) / total) * 100);
+    $("barFill").style.width = pct + "%";
+    $("barCount").textContent = "Étape " + Math.max(idx + 1, 0) + " / " + total;
+
+    if (p.status === "done") {
+      $("agentLine").textContent = "Livraison terminée ✓";
+      $("agentDetail").textContent = p.summary || "Le dépôt cible a été mis à jour.";
+      $("barCommit").textContent = "";
+      $("submitBtn").disabled = false;
+    } else if (p.status === "partial") {
+      $("agentLine").textContent = "Pipeline terminé avec retards";
+      $("agentDetail").textContent = p.summary || "Certaines étapes n'ont pas abouti.";
+      $("submitBtn").disabled = false;
+    } else if (p.status === "running") {
+      var stepName = STEP_NAMES[idx >= 0 ? idx : 0];
+      $("agentLine").textContent = agent ? (stepName + " en cours") : "Démarrage…";
+      $("agentDetail").textContent = agent + " : " + phrases[phraseIdx];
+      $("barCommit").textContent = (p.commits && p.commits.length) ? "Commit " + p.commits[p.commits.length-1] : "";
+    } else {
+      $("agentLine").textContent = "Préparation…";
+      $("agentDetail").textContent = "Initialisation des agents.";
+    }
+
+    Array.prototype.forEach.call($("stepsList").children, function (li, i) {
+      li.classList.remove("done", "active");
+      var done = p.commits && p.commits[i];
+      if (done) li.classList.add("done");
+      else if (i === idx) li.classList.add("active");
+      if (p.status === "done" || p.status === "partial") li.classList.add("done");
+      var commit = p.commits && p.commits[i];
+      li.querySelector(".commit").textContent = done ? (commit || "commité") : "";
+    });
+
+    var lines = [];
+    (p.outputs || []).forEach(function (o) {
+      lines.push("[" + o.agent + "] " + (o.summary || "").split("\n")[0]);
+    });
+    (p.errors || []).forEach(function (e) {
+      var msg = (e.error && e.error.message) || e.message || "erreur";
+      lines.push("[ÉCHEC " + e.agent + "] " + msg);
+    });
+    if (p.summary) lines.push(p.summary);
+    if (lines.length) { $("runLog").textContent = lines.join("\n"); $("runLog").style.display = "block"; }
+
+    if (p.status === "done" || p.status === "partial") return false;
+    return true;
+  }
+
+  async function pollRun(runId) {
+    $("progressPanel").classList.add("show");
+    try {
+      while (true) {
+        var res = await fetch("/api/run/" + runId);
+        if (!res.ok) { $("agentLine").textContent = "Erreur de suivi du run."; $("submitBtn").disabled = false; return; }
+        var p = await res.json();
+        var again = renderProgress(p);
+        if (!again) return;
+        await new Promise(function (r) { setTimeout(r, 1400); });
+      }
+    } catch (err) {
+      $("agentDetail").textContent = "Erreur réseau lors du suivi : " + err.message;
+      $("submitBtn").disabled = false;
+    }
+  }
 
   $("spec-form").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var errBox = $("formError"), okBox = $("formOk"), pre = $("yamlPreview");
-    errBox.hidden = true; okBox.hidden = true;
+    hideError("formError");
+    $("submitBtn").disabled = true;
     try {
       var res = await fetch("/api/spec", {
         method: "POST",
@@ -374,35 +616,21 @@
       try { data = await res.json(); } catch (parseErr) { /* réponse non-JSON */ }
       if (!res.ok) {
         var detail = (data && data.error) || ("HTTP " + res.status);
-        errBox.textContent = res.status === 413
-          ? "Spec trop volumineuse (" + detail + ")."
-          : "Validation échouée :\n" + detail;
-        errBox.hidden = false; pre.hidden = true;
+        setError("formError", "Impossible de lancer la génération :\n" + detail);
+        $("submitBtn").disabled = false;
         return;
       }
-      lastYaml = data.yaml; lastFile = data.file;
-      pre.textContent = data.yaml; pre.hidden = false;
-      okBox.textContent = "Spec valide – " + data.file + " prête à l'emploi.";
-      okBox.hidden = false;
-      $("downloadBtn").disabled = false;
+      if (data.runId) await pollRun(data.runId);
+      else $("submitBtn").disabled = false;
     } catch (err) {
-      errBox.textContent = "Erreur réseau : " + err.message;
-      errBox.hidden = false;
+      setError("formError", "Erreur réseau : " + err.message);
+      $("submitBtn").disabled = false;
     }
-  });
-
-  $("downloadBtn").addEventListener("click", function () {
-    if (!lastYaml) return;
-    var blob = new Blob([lastYaml], { type: "text/yaml" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = lastFile;
-    a.click();
-    URL.revokeObjectURL(a.href);
   });
 
   renderPersonas();
   renderFeatures();
+  updateSubmitState();
 })();
 </script>
 </body>

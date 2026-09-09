@@ -1,0 +1,78 @@
+// Demo App — schéma de données (SQLite via Prisma)
+// Contrat de référence : ARCH.md §6. Ne pas dériver sans mise à jour du document.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Utilisateur (session JWT NextAuth) ──────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  image          String?
+  hashedPassword String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  launchExecutions LaunchExecution[]
+}
+
+// ── Domaine : programmes et exécutions de lancement ────────────────────────
+
+/// Déclencheur d'un programme de lancement.
+enum TriggerKind {
+  MANUAL
+  SCHEDULED
+}
+
+/// Programme de lancement automatisable (manuel ou planifié).
+model LaunchProgram {
+  id                 String      @id @default(cuid())
+  title              String
+  description        String?
+  triggerKind        TriggerKind @default(MANUAL)
+  scheduleExpression String?
+  isEnabled          Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  executions LaunchExecution[]
+
+  @@map("launch_programs")
+  @@index([isEnabled])
+}
+
+/// Statut d'une exécution de lancement.
+enum ExecutionStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+/// Exécution concrète d'un programme de lancement.
+model LaunchExecution {
+  id            String          @id @default(cuid())
+  programId     String
+  status        ExecutionStatus @default(PENDING)
+  note          String?
+  triggeredById String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  program     LaunchProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+  triggeredBy User?         @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@map("launch_executions")
+  @@index([programId])
+  @@index([status])
+}
