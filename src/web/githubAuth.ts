@@ -12,7 +12,7 @@ const DEVICE_CODE_URL = "https://github.com/login/device/code";
 const ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
 
 /** Client OAuth public partagé par les intégrations Copilot. */
-const COPIOT_CLIENT_ID = "Iv1.b507a08c87ecfe98";
+const COPILOT_CLIENT_ID = "Iv1.b507a08c87ecfe98";
 
 /** Scopes demandés : lecture profil + accès dépôts pour les commits/push. */
 const SCOPES = "read:user repo workflow";
@@ -62,7 +62,7 @@ interface AccessTokenResponse {
 
 /** Démarre le device flow : renvoie le code à afficher à l'utilisateur. */
 export async function startDeviceFlow(): Promise<DeviceFlow> {
-  const body = JSON.stringify({ client_id: COPIOT_CLIENT_ID, scope: SCOPES });
+  const body = JSON.stringify({ client_id: COPILOT_CLIENT_ID, scope: SCOPES });
   const res = await fetch(DEVICE_CODE_URL, {
     method: "POST",
     headers: { ...UA, "content-type": "application/json" },
@@ -103,7 +103,7 @@ export async function pollDeviceFlow(
     method: "POST",
     headers: { ...UA, "content-type": "application/json" },
     body: JSON.stringify({
-      client_id: COPIOT_CLIENT_ID,
+      client_id: COPILOT_CLIENT_ID,
       device_code: deviceCode,
       grant_type: "urn:ietf:params:oauth:grant-type:device_code",
     }),
